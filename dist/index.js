@@ -1,28 +1,234 @@
-// fetch helpers
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.load = undefined;
+
+var _slicedToArray2 = require('babel-runtime/helpers/slicedToArray');
+
+var _slicedToArray3 = _interopRequireDefault(_slicedToArray2);
+
+var _entries = require('babel-runtime/core-js/object/entries');
+
+var _entries2 = _interopRequireDefault(_entries);
+
+var _promise = require('babel-runtime/core-js/promise');
+
+var _promise2 = _interopRequireDefault(_promise);
+
+exports.status = status;
+exports.json = json;
+exports.bson = bson;
+exports.cson = cson;
+exports.yaml = yaml;
+exports.arrayBuffer = arrayBuffer;
+exports.fetchJSON = fetchJSON;
+exports.fetchCSON = fetchCSON;
+exports.fetchYAML = fetchYAML;
+exports.fetchBSON = fetchBSON;
+exports.fetchJSONFiles = fetchJSONFiles;
+exports.fetchJSONFiles2 = fetchJSONFiles2;
+exports.fetchArraybuffer = fetchArraybuffer;
+
+var _csonParser = require('cson-parser');
+
+var _csonParser2 = _interopRequireDefault(_csonParser);
+
+var _yamljs = require('yamljs');
+
+var _yamljs2 = _interopRequireDefault(_yamljs);
+
+var _bson = require('bson');
+
+var _bson2 = _interopRequireDefault(_bson);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var bsonInstance = new _bson2.default(); // fetch helpers
 // import fetch from 'isomorphic-fetch';
-import CSON from 'cson-parser';
-import YAML from 'yamljs';
-import BSON from 'bson';
+function status(response) {
+    if (response.status >= 200 && response.status < 300) {
+        return _promise2.default.resolve(response);
+    }
+    return _promise2.default.reject(new Error(response.statusText));
+}
 
-const bsonInstance = new BSON();
+function json(response) {
+    return response.json();
+}
 
-const load = (file, type = null) => {
-    let t = type;
-    let json;
+function bson(response) {
+    return response.blob().then(function (data) {
+        return _promise2.default.resolve(bsonInstance.deserialize(data));
+    }).catch(function (e) {
+        return _promise2.default.reject(e);
+    });
+}
+
+function cson(response) {
+    return response.text().then(function (data) {
+        return _promise2.default.resolve(_csonParser2.default.parse(data));
+    }).catch(function (e) {
+        return _promise2.default.reject(e);
+    });
+}
+
+function yaml(response) {
+    return response.text().then(function (data) {
+        return _promise2.default.resolve(_yamljs2.default.parse(data));
+    }).catch(function (e) {
+        return _promise2.default.reject(e);
+    });
+}
+
+function arrayBuffer(response) {
+    return response.arrayBuffer();
+}
+
+function fetchJSON(url) {
+    return new _promise2.default(function (resolve, reject) {
+        // fetch(url, {
+        //   mode: 'no-cors'
+        // })
+        fetch(url).then(status).then(json).then(function (data) {
+            resolve(data);
+        }).catch(function (e) {
+            reject(e);
+        });
+    });
+}
+
+function fetchCSON(url) {
+    return new _promise2.default(function (resolve, reject) {
+        // fetch(url, {
+        //   mode: 'no-cors'
+        // })
+        fetch(url).then(status).then(cson).then(function (data) {
+            resolve(data);
+        }).catch(function (e) {
+            reject(e);
+        });
+    });
+}
+
+function fetchYAML(url) {
+    return new _promise2.default(function (resolve, reject) {
+        // fetch(url, {
+        //   mode: 'no-cors'
+        // })
+        fetch(url).then(status).then(yaml).then(function (data) {
+            resolve(data);
+        }).catch(function (e) {
+            reject(e);
+        });
+    });
+}
+
+function fetchBSON(url) {
+    return new _promise2.default(function (resolve, reject) {
+        // fetch(url, {
+        //   mode: 'no-cors'
+        // })
+        fetch(url).then(status).then(bson).then(function (data) {
+            resolve(data);
+        }).catch(function (e) {
+            reject(e);
+        });
+    });
+}
+
+function fetchJSONFiles(urlArray) {
+    return new _promise2.default(function (resolve, reject) {
+        var promises = [];
+        var errors = [];
+
+        urlArray.forEach(function (url) {
+            promises.push(fetch(url).then(status).then(json).then(function (data) {
+                return data;
+            }).catch(function (e) {
+                errors.push(url);
+                return null;
+            }));
+        });
+
+        _promise2.default.all(promises).then(function (data) {
+            var jsonFiles = data.filter(function (file) {
+                return file !== null;
+            });
+            resolve({ jsonFiles: jsonFiles, errors: errors });
+        }, function (error) {
+            reject(error);
+        });
+    });
+}
+
+function fetchJSONFiles2(object, baseurl) {
+    return new _promise2.default(function (resolve, reject) {
+        var promises = [];
+        var errors = [];
+        var keys = [];
+
+        (0, _entries2.default)(object).forEach(function (_ref) {
+            var _ref2 = (0, _slicedToArray3.default)(_ref, 2),
+                key = _ref2[0],
+                url = _ref2[1];
+
+            keys.push(key);
+            promises.push(fetch(baseurl + url).then(status).then(json).then(function (data) {
+                return data;
+            }).catch(function (e) {
+                errors.push(url);
+                return null;
+            }));
+        });
+
+        _promise2.default.all(promises).then(function (data) {
+            var jsonFiles = {};
+            data.forEach(function (file, index) {
+                if (file !== null) {
+                    jsonFiles[keys[index]] = file;
+                }
+            });
+            resolve({ jsonFiles: jsonFiles, errors: errors });
+        }, function (error) {
+            reject(error);
+        });
+    });
+}
+
+function fetchArraybuffer(url) {
+    return new _promise2.default(function (resolve, reject) {
+        // fetch(url, {
+        //   mode: 'no-cors'
+        // })
+        fetch(url).then(status).then(arrayBuffer).then(function (data) {
+            resolve(data);
+        }).catch(function (e) {
+            reject(e);
+        });
+    });
+}
+
+var load = exports.load = function load(file) {
+    var type = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+
+    var t = type;
+    var parsedJSON = void 0;
     if (t === null) {
-        if (typeof file, type !== 'string') {
+        if (typeof file !== 'string') {
             t = 'object';
-        } else if (file, type.search(/.ya?ml/) !== -1) {
+        } else if (file.search(/.ya?ml/) !== -1) {
             t = 'yaml';
-        } else if (file, type.search(/.json/) !== -1) {
+        } else if (file.search(/.json/) !== -1) {
             t = 'json';
-        } else if (file, type.search(/.bson/) !== -1) {
+        } else if (file.search(/.bson/) !== -1) {
             t = 'bson';
-        } else if (file, type.search(/.cson/) !== -1) {
+        } else if (file.search(/.cson/) !== -1) {
             t = 'cson';
         } else {
             try {
-                json = JSON.parse(file, type);
+                parsedJSON = JSON.parse(file, type);
                 t = 'json_string';
             } catch (e) {
                 t = null;
@@ -31,163 +237,46 @@ const load = (file, type = null) => {
     }
 
     if (t === 'object') {
-        return Promise.resolve(file);
+        return _promise2.default.resolve(file);
     }
     if (t === 'json_string') {
-        return Promise.resolve(JSON.parse(json));
+        return _promise2.default.resolve(parsedJSON);
     }
     if (t === 'json') {
-        return fetchJSON(file, type).then(data => data, () => null).catch(() => null);
+        return fetchJSON(file, type).then(function (data) {
+            return data;
+        }, function () {
+            return null;
+        }).catch(function () {
+            return null;
+        });
     }
     if (t === 'yaml') {
-        return fetchYAML(file, type).then(data => data, () => null).catch(() => null);
+        return fetchYAML(file, type).then(function (data) {
+            return data;
+        }, function () {
+            return null;
+        }).catch(function () {
+            return null;
+        });
     }
     if (t === 'bson') {
-        return fetchBSON(file, type).then(data => data, () => null).catch(() => null);
+        return fetchBSON(file, type).then(function (data) {
+            return data;
+        }, function () {
+            return null;
+        }).catch(function () {
+            return null;
+        });
     }
     if (t === 'cson') {
-        return fetchCSON(file, type).then(data => data, () => null).catch(() => null);
+        return fetchCSON(file, type).then(function (data) {
+            return data;
+        }, function () {
+            return null;
+        }).catch(function () {
+            return null;
+        });
     }
-    return Promise.reject('not a supported type');
+    return _promise2.default.reject(new Error('not a supported type'));
 };
-
-export function status(response) {
-    if (response.status >= 200 && response.status < 300) {
-        return Promise.resolve(response);
-    }
-    return Promise.reject(new Error(response.statusText));
-}
-
-export function json(response) {
-    return response.json();
-}
-
-export function bson(response) {
-    return response.blob().then(data => Promise.resolve(bsonInstance.deserialize(data)));
-}
-
-export function cson(response) {
-    return response.text().then(data => Promise.resolve(CSON.parse(data)));
-}
-
-export function yaml(response) {
-    return response.text().then(data => Promise.resolve(YAML.parse(data)));
-}
-
-export function arrayBuffer(response) {
-    return response.arrayBuffer();
-}
-
-export function fetchJSON(url) {
-    return new Promise((resolve, reject) => {
-        // fetch(url, {
-        //   mode: 'no-cors'
-        // })
-        fetch(url).then(status).then(json).then(data => {
-            resolve(data);
-        }).catch(e => {
-            reject(e);
-        });
-    });
-}
-
-export function fetchCSON(url) {
-    return new Promise((resolve, reject) => {
-        // fetch(url, {
-        //   mode: 'no-cors'
-        // })
-        fetch(url).then(status).then(cson).then(data => {
-            resolve(data);
-        }).catch(e => {
-            reject(e);
-        });
-    });
-}
-
-export function fetchYAML(url) {
-    return new Promise((resolve, reject) => {
-        // fetch(url, {
-        //   mode: 'no-cors'
-        // })
-        fetch(url).then(status).then(yaml).then(data => {
-            resolve(data);
-        }).catch(e => {
-            reject(e);
-        });
-    });
-}
-
-export function fetchBSON(url) {
-    return new Promise((resolve, reject) => {
-        // fetch(url, {
-        //   mode: 'no-cors'
-        // })
-        fetch(url).then(status).then(bson).then(data => {
-            resolve(data);
-        }).catch(e => {
-            reject(e);
-        });
-    });
-}
-
-export function fetchJSONFiles(urlArray) {
-    return new Promise((resolve, reject) => {
-        const promises = [];
-        const errors = [];
-
-        urlArray.forEach(url => {
-            promises.push(fetch(url).then(status).then(json).then(data => data).catch(e => {
-                errors.push(url);
-                return null;
-            }));
-        });
-
-        Promise.all(promises).then(data => {
-            const jsonFiles = data.filter(file => file !== null);
-            resolve({ jsonFiles, errors });
-        }, error => {
-            reject({ error });
-        });
-    });
-}
-
-export function fetchJSONFiles2(object, baseurl) {
-    return new Promise((resolve, reject) => {
-        const promises = [];
-        const errors = [];
-        const keys = [];
-
-        Object.entries(object).forEach(([key, url]) => {
-            keys.push(key);
-            promises.push(fetch(baseurl + url).then(status).then(json).then(data => data).catch(e => {
-                errors.push(url);
-                return null;
-            }));
-        });
-
-        Promise.all(promises).then(data => {
-            const jsonFiles = {};
-            data.forEach((file, index) => {
-                if (file !== null) {
-                    jsonFiles[keys[index]] = file;
-                }
-            });
-            resolve({ jsonFiles, errors });
-        }, error => {
-            reject({ error });
-        });
-    });
-}
-
-export function fetchArraybuffer(url) {
-    return new Promise((resolve, reject) => {
-        // fetch(url, {
-        //   mode: 'no-cors'
-        // })
-        fetch(url).then(status).then(arrayBuffer).then(data => {
-            resolve(data);
-        }).catch(e => {
-            reject(e);
-        });
-    });
-}

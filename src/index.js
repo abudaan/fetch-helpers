@@ -6,59 +6,6 @@ import BSON from 'bson';
 
 const bsonInstance = new BSON();
 
-const load = (file, type = null) => {
-    let t = type;
-    let json;
-    if (t === null) {
-        if (typeof file, type !== 'string') {
-            t = 'object';
-        } else if (file, type.search(/.ya?ml/) !== -1) {
-            t = 'yaml';
-        } else if (file, type.search(/.json/) !== -1) {
-            t = 'json';
-        } else if (file, type.search(/.bson/) !== -1) {
-            t = 'bson';
-        } else if (file, type.search(/.cson/) !== -1) {
-            t = 'cson';
-        } else {
-            try {
-                json = JSON.parse(file, type);
-                t = 'json_string';
-            } catch (e) {
-                t = null;
-            }
-        }
-    }
-
-    if (t === 'object') {
-        return Promise.resolve(file);
-    }
-    if (t === 'json_string') {
-        return Promise.resolve(JSON.parse(json));
-    }
-    if (t === 'json') {
-        return fetchJSON(file, type)
-            .then(data => data, () => null)
-            .catch(() => null);
-    }
-    if (t === 'yaml') {
-        return fetchYAML(file, type)
-            .then(data => data, () => null)
-            .catch(() => null);
-    }
-    if (t === 'bson') {
-        return fetchBSON(file, type)
-            .then(data => data, () => null)
-            .catch(() => null);
-    }
-    if (t === 'cson') {
-        return fetchCSON(file, type)
-            .then(data => data, () => null)
-            .catch(() => null);
-    }
-    return Promise.reject('not a supported type');
-};
-
 export function status(response) {
     if (response.status >= 200 && response.status < 300) {
         return Promise.resolve(response);
@@ -78,13 +25,13 @@ export function bson(response) {
 
 export function cson(response) {
     return response.text()
-        .then(data => Promise.resolve(CSON.parse(data)));
+        .then(data => Promise.resolve(CSON.parse(data)))
         .catch(e => Promise.reject(e));
 }
 
 export function yaml(response) {
     return response.text()
-        .then(data => Promise.resolve(YAML.parse(data)));
+        .then(data => Promise.resolve(YAML.parse(data)))
         .catch(e => Promise.reject(e));
 }
 
@@ -167,28 +114,26 @@ export function fetchJSONFiles(urlArray) {
         const errors = [];
 
         urlArray.forEach((url) => {
-            promises.push(
-                fetch(url)
-                    .then(status)
-                    .then(json)
-                    .then(data => data)
-                    .catch((e) => {
-                        errors.push(url);
-                        return null;
-                    }),
-            );
+            promises.push(fetch(url)
+                .then(status)
+                .then(json)
+                .then(data => data)
+                .catch((e) => {
+                    errors.push(url);
+                    return null;
+                }));
         });
 
         Promise.all(promises)
             .then(
-            (data) => {
-                const jsonFiles = data.filter(file => file !== null);
-                resolve({ jsonFiles, errors });
-            },
-            (error) => {
-                reject({ error });
-            },
-        );
+                (data) => {
+                    const jsonFiles = data.filter(file => file !== null);
+                    resolve({ jsonFiles, errors });
+                },
+                (error) => {
+                    reject(error);
+                },
+            );
     });
 }
 
@@ -200,33 +145,31 @@ export function fetchJSONFiles2(object, baseurl) {
 
         Object.entries(object).forEach(([key, url]) => {
             keys.push(key);
-            promises.push(
-                fetch(baseurl + url)
-                    .then(status)
-                    .then(json)
-                    .then(data => data)
-                    .catch((e) => {
-                        errors.push(url);
-                        return null;
-                    }),
-            );
+            promises.push(fetch(baseurl + url)
+                .then(status)
+                .then(json)
+                .then(data => data)
+                .catch((e) => {
+                    errors.push(url);
+                    return null;
+                }));
         });
 
         Promise.all(promises)
             .then(
-            (data) => {
-                const jsonFiles = {};
-                data.forEach((file, index) => {
-                    if (file !== null) {
-                        jsonFiles[keys[index]] = file;
-                    }
-                });
-                resolve({ jsonFiles, errors });
-            },
-            (error) => {
-                reject({ error });
-            },
-        );
+                (data) => {
+                    const jsonFiles = {};
+                    data.forEach((file, index) => {
+                        if (file !== null) {
+                            jsonFiles[keys[index]] = file;
+                        }
+                    });
+                    resolve({ jsonFiles, errors });
+                },
+                (error) => {
+                    reject(error);
+                },
+            );
     });
 }
 
@@ -246,3 +189,57 @@ export function fetchArraybuffer(url) {
             });
     });
 }
+
+
+export const load = (file, type = null) => {
+    let t = type;
+    let parsedJSON;
+    if (t === null) {
+        if (typeof file !== 'string') {
+            t = 'object';
+        } else if (file.search(/.ya?ml/) !== -1) {
+            t = 'yaml';
+        } else if (file.search(/.json/) !== -1) {
+            t = 'json';
+        } else if (file.search(/.bson/) !== -1) {
+            t = 'bson';
+        } else if (file.search(/.cson/) !== -1) {
+            t = 'cson';
+        } else {
+            try {
+                parsedJSON = JSON.parse(file, type);
+                t = 'json_string';
+            } catch (e) {
+                t = null;
+            }
+        }
+    }
+
+    if (t === 'object') {
+        return Promise.resolve(file);
+    }
+    if (t === 'json_string') {
+        return Promise.resolve(parsedJSON);
+    }
+    if (t === 'json') {
+        return fetchJSON(file, type)
+            .then(data => data, () => null)
+            .catch(() => null);
+    }
+    if (t === 'yaml') {
+        return fetchYAML(file, type)
+            .then(data => data, () => null)
+            .catch(() => null);
+    }
+    if (t === 'bson') {
+        return fetchBSON(file, type)
+            .then(data => data, () => null)
+            .catch(() => null);
+    }
+    if (t === 'cson') {
+        return fetchCSON(file, type)
+            .then(data => data, () => null)
+            .catch(() => null);
+    }
+    return Promise.reject(new Error('not a supported type'));
+};
