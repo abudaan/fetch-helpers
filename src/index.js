@@ -72,17 +72,20 @@ export function json(response) {
 
 export function bson(response) {
     return response.blob()
-        .then(data => Promise.resolve(bsonInstance.deserialize(data)));
+        .then(data => Promise.resolve(bsonInstance.deserialize(data)))
+        .catch(e => Promise.reject(e));
 }
 
 export function cson(response) {
     return response.text()
         .then(data => Promise.resolve(CSON.parse(data)));
+        .catch(e => Promise.reject(e));
 }
 
 export function yaml(response) {
     return response.text()
         .then(data => Promise.resolve(YAML.parse(data)));
+        .catch(e => Promise.reject(e));
 }
 
 export function arrayBuffer(response) {
