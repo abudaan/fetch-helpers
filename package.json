@@ -1,0 +1,42 @@
+{
+    "name": "fetch-helpers",
+    "version": "1.0.0",
+    "description": "A set of helper functions for fetch",
+    "license": "MIT",
+    "author": "abudaan",
+    "main": "dist/index.js",
+    "module": "src/index.js",
+    "repository": "git://github.com/abudaan/fetch-helpers.git",
+    "bugs": {
+        "url": "https://github.com/abudaan/fetch-helpers/issues"
+    },
+    "scripts": {
+        "compile": "babel ./src --out-dir ./dist"
+    },
+    "keywords": [
+        "fetch",
+        "YAML",
+        "JSON",
+        "BSON",
+        "CSON"
+    ],
+    "dependencies": {
+        "bson": "^1.0.4",
+        "cson-parser": "^2.0.0",
+        "yamljs": "^0.3.0"
+    },
+    "devDependencies": {
+        "babelify": "^7.3.0",
+        "babel-cli": "^6.26.0",
+        "babel-eslint": "^7.2.3",
+        "babel-plugin-transform-runtime": "^6.23.0",
+        "babel-preset-env": "^1.6.0",
+        "babel-preset-stage-0": "^6.24.1",
+        "eslint": "3.19.0",
+        "eslint-config-airbnb": "14.1.0",
+        "eslint-plugin-babel": "4.1.1",
+        "eslint-plugin-import": "2.2.0",
+        "eslint-plugin-jsx-a11y": "4.0.0",
+        "watchify": "^3.9.0"
+    }
+}
