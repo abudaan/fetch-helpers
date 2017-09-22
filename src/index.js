@@ -221,7 +221,8 @@ export const load = (file, type = null) => {
     if (t === 'json_string') {
         return Promise.resolve(parsedJSON);
     }
-    if (t === 'json') {
+    // if null assume REST API JSON (quick fix)
+    if (t === 'json' || t === null) {
         return fetchJSON(file, type)
             .then(data => data, () => null)
             .catch(() => null);
@@ -241,5 +242,6 @@ export const load = (file, type = null) => {
             .then(data => data, () => null)
             .catch(() => null);
     }
+
     return Promise.reject(new Error('not a supported type'));
 };
