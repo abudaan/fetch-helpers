@@ -214,6 +214,7 @@ export const load = (file, type = null) => {
             }
         }
     }
+    // @TODO support for REST API urls => or provide type
 
     if (t === 'object') {
         return Promise.resolve(file);
@@ -221,8 +222,7 @@ export const load = (file, type = null) => {
     if (t === 'json_string') {
         return Promise.resolve(parsedJSON);
     }
-    // if null assume REST API JSON (quick fix)
-    if (t === 'json' || t === null) {
+    if (t === 'json') {
         return fetchJSON(file, type)
             .then(data => data, () => null)
             .catch(() => null);
