@@ -214,7 +214,6 @@ export const load = (file, type = null) => {
             }
         }
     }
-    // @TODO support for REST API urls => or provide type
 
     if (t === 'object') {
         return Promise.resolve(file);
