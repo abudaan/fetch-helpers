@@ -2,7 +2,7 @@ import { load } from '../../src/index';
 
 // JSON
 
-load('http://localhost:3000/test.json')
+load('http://localhost:3000/data/test.json')
     .then((response) => {
         console.log('JSON file', response);
     })
@@ -17,7 +17,7 @@ load('http://localhost:3000/json')
 
 // YAML
 
-load('http://localhost:3000/test.yaml')
+load('http://localhost:3000/data/test.yaml')
     .then((response) => {
         console.log('YAML file', response);
     })
@@ -32,7 +32,7 @@ load('http://localhost:3000/yaml')
 
 // BSON
 
-load('http://localhost:3000/test.bson')
+load('http://localhost:3000/data/test.bson')
     .then((response) => {
         console.log('BSON file', response);
     })
@@ -47,13 +47,13 @@ load('http://localhost:3000/bson')
 
 // CSON
 
-load('http://localhost:3000/test.cson')
+load('http://localhost:3000/data/test.cson')
     .then((response) => {
         console.log('CSON file', response);
     })
     .catch(e => console.log(e));
 
-load('http://localhost:3000/cson', 'cson')
+load('http://localhost:3000/cson')
     .then((response) => {
         console.log('CSON REST', response);
     })

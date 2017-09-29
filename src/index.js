@@ -37,8 +37,11 @@ const checkTypeAndParse = (response) => {
     if (type.indexOf('text/yaml') === 0) {
         return yaml(response);
     }
-    if (type.indexOf('application/octet-stream') === 0) {
+    if (type.indexOf('application/bson') === 0) {
         return bson(response);
+    }
+    if (type.indexOf('text/cson') === 0) {
+        return cson(response);
     }
     return Promise.reject(new Error('could not detect type'));
 };
@@ -212,7 +215,7 @@ const load = (file, type = null) => {
         } else {
             try {
                 parsedJSON = JSON.parse(file, type);
-                t = 'json_string';
+                t = 'json-string';
             } catch (e) {
                 t = null;
             }
@@ -222,7 +225,7 @@ const load = (file, type = null) => {
     if (t === 'object') {
         return Promise.resolve(file);
     }
-    if (t === 'json_string') {
+    if (t === 'json-string') {
         return Promise.resolve(parsedJSON);
     }
     if (t === 'json') {
@@ -240,10 +243,9 @@ const load = (file, type = null) => {
     if (t === 'cson') {
         return fetchCSON(file, type)
             .then(data => data, e => e);
-    } else if (t === null) {
-        return fetchREST(file)
-            .then(data => data, e => e);
     }
+    return fetchREST(file)
+        .then(data => data, e => e);
 };
 
 export {
