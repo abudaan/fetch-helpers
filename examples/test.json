@@ -1,0 +1,16 @@
+{
+    "debug": false,
+    "hover": false,
+    "renderer": "canvas",
+    "overwrite": false,
+    "specs": {
+        "spec2": [
+            "https://fffact.linxpy.com/api/vega/2/spec/",
+            "https://fffact.linxpy.com/fdata/spec2.config.yaml"
+        ],
+        "spec1": [
+            "https://fffact.linxpy.com/api/vega/1/spec/",
+            "https://fffact.linxpy.com/fdata/spec1.config.yaml"
+        ]
+    }
+}

@@ -11,7 +11,8 @@
         "url": "https://github.com/abudaan/fetch-helpers/issues"
     },
     "scripts": {
-        "compile": "babel ./src --out-dir ./dist"
+        "watch": "watchify 1/app.js -t babelify -o 1/app.bundle.js --debug --verbose",
+        "server": "babel-node server.js"
     },
     "keywords": [
         "fetch",
@@ -23,6 +24,10 @@
     "dependencies": {
         "bson": "^1.0.4",
         "cson-parser": "^2.0.0",
+        "koa": "^2.3.0",
+        "koa-logger": "^3.1.0",
+        "koa-router": "^7.2.1",
+        "koa-static": "^4.0.1",
         "yamljs": "^0.3.0"
     },
     "devDependencies": {

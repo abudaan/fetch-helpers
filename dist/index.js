@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
-exports.load = undefined;
+exports.fetchREST = exports.fetchYAML = exports.fetchCSON = exports.fetchBSON = exports.fetchJSONFiles2 = exports.fetchJSONFiles = exports.fetchJSON = exports.arrayBuffer = exports.yaml = exports.cson = exports.bson = exports.json = exports.status = exports.load = undefined;
 
 var _slicedToArray2 = require('babel-runtime/helpers/slicedToArray');
 
@@ -16,20 +16,6 @@ var _entries2 = _interopRequireDefault(_entries);
 var _promise = require('babel-runtime/core-js/promise');
 
 var _promise2 = _interopRequireDefault(_promise);
-
-exports.status = status;
-exports.json = json;
-exports.bson = bson;
-exports.cson = cson;
-exports.yaml = yaml;
-exports.arrayBuffer = arrayBuffer;
-exports.fetchJSON = fetchJSON;
-exports.fetchCSON = fetchCSON;
-exports.fetchYAML = fetchYAML;
-exports.fetchBSON = fetchBSON;
-exports.fetchJSONFiles = fetchJSONFiles;
-exports.fetchJSONFiles2 = fetchJSONFiles2;
-exports.fetchArraybuffer = fetchArraybuffer;
 
 var _csonParser = require('cson-parser');
 
@@ -47,46 +33,76 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 var bsonInstance = new _bson2.default(); // fetch helpers
 // import fetch from 'isomorphic-fetch';
-function status(response) {
+
+
+var status = function status(response) {
     if (response.status >= 200 && response.status < 300) {
         return _promise2.default.resolve(response);
     }
     return _promise2.default.reject(new Error(response.statusText));
-}
+};
 
-function json(response) {
+var json = function json(response) {
     return response.json();
-}
+};
 
-function bson(response) {
+var bson = function bson(response) {
     return response.blob().then(function (data) {
         return _promise2.default.resolve(bsonInstance.deserialize(data));
     }).catch(function (e) {
         return _promise2.default.reject(e);
     });
-}
+};
 
-function cson(response) {
+var cson = function cson(response) {
     return response.text().then(function (data) {
         return _promise2.default.resolve(_csonParser2.default.parse(data));
     }).catch(function (e) {
         return _promise2.default.reject(e);
     });
-}
+};
 
-function yaml(response) {
+var yaml = function yaml(response) {
     return response.text().then(function (data) {
         return _promise2.default.resolve(_yamljs2.default.parse(data));
     }).catch(function (e) {
         return _promise2.default.reject(e);
     });
-}
+};
 
-function arrayBuffer(response) {
+var arrayBuffer = function arrayBuffer(response) {
     return response.arrayBuffer();
-}
+};
 
-function fetchJSON(url) {
+var checkTypeAndParse = function checkTypeAndParse(response) {
+    var type = response.headers.get('content-type');
+    if (type.indexOf('application/json') === 0) {
+        return json(response);
+    }
+    if (type.indexOf('text/yaml') === 0) {
+        return yaml(response);
+    }
+    if (type.indexOf('application/octet-stream') === 0) {
+        return bson(response);
+    }
+    return _promise2.default.reject(new Error('could not detect type'));
+};
+
+var fetchREST = function fetchREST(url) {
+    return new _promise2.default(function (resolve, reject) {
+        // fetch(url, {
+        //   mode: 'no-cors'
+        // })
+        // console.log('REST');
+        fetch(url).then(status).then(checkTypeAndParse).then(function (data) {
+            resolve(data);
+        }).catch(function (e) {
+            reject(e);
+        });
+    });
+};
+
+var fetchJSON = function fetchJSON(url) {
     return new _promise2.default(function (resolve, reject) {
         // fetch(url, {
         //   mode: 'no-cors'
@@ -97,9 +113,9 @@ function fetchJSON(url) {
             reject(e);
         });
     });
-}
+};
 
-function fetchCSON(url) {
+var fetchCSON = function fetchCSON(url) {
     return new _promise2.default(function (resolve, reject) {
         // fetch(url, {
         //   mode: 'no-cors'
@@ -110,9 +126,9 @@ function fetchCSON(url) {
             reject(e);
         });
     });
-}
+};
 
-function fetchYAML(url) {
+var fetchYAML = function fetchYAML(url) {
     return new _promise2.default(function (resolve, reject) {
         // fetch(url, {
         //   mode: 'no-cors'
@@ -123,9 +139,9 @@ function fetchYAML(url) {
             reject(e);
         });
     });
-}
+};
 
-function fetchBSON(url) {
+var fetchBSON = function fetchBSON(url) {
     return new _promise2.default(function (resolve, reject) {
         // fetch(url, {
         //   mode: 'no-cors'
@@ -136,9 +152,9 @@ function fetchBSON(url) {
             reject(e);
         });
     });
-}
+};
 
-function fetchJSONFiles(urlArray) {
+var fetchJSONFiles = function fetchJSONFiles(urlArray) {
     return new _promise2.default(function (resolve, reject) {
         var promises = [];
         var errors = [];
@@ -161,9 +177,9 @@ function fetchJSONFiles(urlArray) {
             reject(error);
         });
     });
-}
+};
 
-function fetchJSONFiles2(object, baseurl) {
+var fetchJSONFiles2 = function fetchJSONFiles2(object, baseurl) {
     return new _promise2.default(function (resolve, reject) {
         var promises = [];
         var errors = [];
@@ -195,9 +211,9 @@ function fetchJSONFiles2(object, baseurl) {
             reject(error);
         });
     });
-}
+};
 
-function fetchArraybuffer(url) {
+var fetchArraybuffer = function fetchArraybuffer(url) {
     return new _promise2.default(function (resolve, reject) {
         // fetch(url, {
         //   mode: 'no-cors'
@@ -208,9 +224,9 @@ function fetchArraybuffer(url) {
             reject(e);
         });
     });
-}
+};
 
-var load = exports.load = function load(file) {
+var load = function load(file) {
     var type = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
 
     var t = type;
@@ -218,13 +234,13 @@ var load = exports.load = function load(file) {
     if (t === null) {
         if (typeof file !== 'string') {
             t = 'object';
-        } else if (file.search(/.ya?ml/) !== -1) {
+        } else if (file.search(/\.ya?ml/) !== -1) {
             t = 'yaml';
-        } else if (file.search(/.json/) !== -1) {
+        } else if (file.search(/\.json/) !== -1) {
             t = 'json';
-        } else if (file.search(/.bson/) !== -1) {
+        } else if (file.search(/\.bson/) !== -1) {
             t = 'bson';
-        } else if (file.search(/.cson/) !== -1) {
+        } else if (file.search(/\.cson/) !== -1) {
             t = 'cson';
         } else {
             try {
@@ -245,38 +261,50 @@ var load = exports.load = function load(file) {
     if (t === 'json') {
         return fetchJSON(file, type).then(function (data) {
             return data;
-        }, function () {
-            return null;
-        }).catch(function () {
-            return null;
+        }, function (e) {
+            return e;
         });
     }
     if (t === 'yaml') {
         return fetchYAML(file, type).then(function (data) {
             return data;
-        }, function () {
-            return null;
-        }).catch(function () {
-            return null;
+        }, function (e) {
+            return e;
         });
     }
     if (t === 'bson') {
         return fetchBSON(file, type).then(function (data) {
             return data;
-        }, function () {
-            return null;
-        }).catch(function () {
-            return null;
+        }, function (e) {
+            return e;
         });
     }
     if (t === 'cson') {
         return fetchCSON(file, type).then(function (data) {
             return data;
-        }, function () {
-            return null;
-        }).catch(function () {
-            return null;
+        }, function (e) {
+            return e;
+        });
+    } else if (t === null) {
+        return fetchREST(file).then(function (data) {
+            return data;
+        }, function (e) {
+            return e;
         });
     }
-    return _promise2.default.reject(new Error('not a supported type'));
 };
+
+exports.load = load;
+exports.status = status;
+exports.json = json;
+exports.bson = bson;
+exports.cson = cson;
+exports.yaml = yaml;
+exports.arrayBuffer = arrayBuffer;
+exports.fetchJSON = fetchJSON;
+exports.fetchJSONFiles = fetchJSONFiles;
+exports.fetchJSONFiles2 = fetchJSONFiles2;
+exports.fetchBSON = fetchBSON;
+exports.fetchCSON = fetchCSON;
+exports.fetchYAML = fetchYAML;
+exports.fetchREST = fetchREST;

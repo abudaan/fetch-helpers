@@ -6,204 +6,208 @@ import BSON from 'bson';
 
 const bsonInstance = new BSON();
 
-export function status(response) {
+const status = (response) => {
     if (response.status >= 200 && response.status < 300) {
         return Promise.resolve(response);
     }
     return Promise.reject(new Error(response.statusText));
-}
+};
 
-export function json(response) {
-    return response.json();
-}
+const json = response => response.json();
 
-export function bson(response) {
-    return response.blob()
-        .then(data => Promise.resolve(bsonInstance.deserialize(data)))
-        .catch(e => Promise.reject(e));
-}
+const bson = response => response.blob()
+    .then(data => Promise.resolve(bsonInstance.deserialize(data)))
+    .catch(e => Promise.reject(e));
 
-export function cson(response) {
-    return response.text()
-        .then(data => Promise.resolve(CSON.parse(data)))
-        .catch(e => Promise.reject(e));
-}
+const cson = response => response.text()
+    .then(data => Promise.resolve(CSON.parse(data)))
+    .catch(e => Promise.reject(e));
 
-export function yaml(response) {
-    return response.text()
-        .then(data => Promise.resolve(YAML.parse(data)))
-        .catch(e => Promise.reject(e));
-}
+const yaml = response => response.text()
+    .then(data => Promise.resolve(YAML.parse(data)))
+    .catch(e => Promise.reject(e));
 
-export function arrayBuffer(response) {
-    return response.arrayBuffer();
-}
+const arrayBuffer = response => response.arrayBuffer();
 
+const checkTypeAndParse = (response) => {
+    const type = response.headers.get('content-type');
+    if (type.indexOf('application/json') === 0) {
+        return json(response);
+    }
+    if (type.indexOf('text/yaml') === 0) {
+        return yaml(response);
+    }
+    if (type.indexOf('application/octet-stream') === 0) {
+        return bson(response);
+    }
+    return Promise.reject(new Error('could not detect type'));
+};
 
-export function fetchJSON(url) {
-    return new Promise((resolve, reject) => {
-        // fetch(url, {
-        //   mode: 'no-cors'
-        // })
-        fetch(url)
+const fetchREST = url => new Promise((resolve, reject) => {
+    // fetch(url, {
+    //   mode: 'no-cors'
+    // })
+    // console.log('REST');
+    fetch(url)
+        .then(status)
+        .then(checkTypeAndParse)
+        .then((data) => {
+            resolve(data);
+        })
+        .catch((e) => {
+            reject(e);
+        });
+});
+
+const fetchJSON = url => new Promise((resolve, reject) => {
+    // fetch(url, {
+    //   mode: 'no-cors'
+    // })
+    fetch(url)
+        .then(status)
+        .then(json)
+        .then((data) => {
+            resolve(data);
+        })
+        .catch((e) => {
+            reject(e);
+        });
+});
+
+const fetchCSON = url => new Promise((resolve, reject) => {
+    // fetch(url, {
+    //   mode: 'no-cors'
+    // })
+    fetch(url)
+        .then(status)
+        .then(cson)
+        .then((data) => {
+            resolve(data);
+        })
+        .catch((e) => {
+            reject(e);
+        });
+});
+
+const fetchYAML = url => new Promise((resolve, reject) => {
+    // fetch(url, {
+    //   mode: 'no-cors'
+    // })
+    fetch(url)
+        .then(status)
+        .then(yaml)
+        .then((data) => {
+            resolve(data);
+        })
+        .catch((e) => {
+            reject(e);
+        });
+});
+
+const fetchBSON = url => new Promise((resolve, reject) => {
+    // fetch(url, {
+    //   mode: 'no-cors'
+    // })
+    fetch(url)
+        .then(status)
+        .then(bson)
+        .then((data) => {
+            resolve(data);
+        })
+        .catch((e) => {
+            reject(e);
+        });
+});
+
+const fetchJSONFiles = urlArray => new Promise((resolve, reject) => {
+    const promises = [];
+    const errors = [];
+
+    urlArray.forEach((url) => {
+        promises.push(fetch(url)
             .then(status)
             .then(json)
-            .then((data) => {
-                resolve(data);
-            })
+            .then(data => data)
             .catch((e) => {
-                reject(e);
-            });
+                errors.push(url);
+                return null;
+            }));
     });
-}
 
-export function fetchCSON(url) {
-    return new Promise((resolve, reject) => {
-        // fetch(url, {
-        //   mode: 'no-cors'
-        // })
-        fetch(url)
+    Promise.all(promises)
+        .then(
+            (data) => {
+                const jsonFiles = data.filter(file => file !== null);
+                resolve({ jsonFiles, errors });
+            },
+            (error) => {
+                reject(error);
+            },
+        );
+});
+
+const fetchJSONFiles2 = (object, baseurl) => new Promise((resolve, reject) => {
+    const promises = [];
+    const errors = [];
+    const keys = [];
+
+    Object.entries(object).forEach(([key, url]) => {
+        keys.push(key);
+        promises.push(fetch(baseurl + url)
             .then(status)
-            .then(cson)
-            .then((data) => {
-                resolve(data);
-            })
+            .then(json)
+            .then(data => data)
             .catch((e) => {
-                reject(e);
-            });
+                errors.push(url);
+                return null;
+            }));
     });
-}
 
-export function fetchYAML(url) {
-    return new Promise((resolve, reject) => {
-        // fetch(url, {
-        //   mode: 'no-cors'
-        // })
-        fetch(url)
-            .then(status)
-            .then(yaml)
-            .then((data) => {
-                resolve(data);
-            })
-            .catch((e) => {
-                reject(e);
-            });
-    });
-}
+    Promise.all(promises)
+        .then(
+            (data) => {
+                const jsonFiles = {};
+                data.forEach((file, index) => {
+                    if (file !== null) {
+                        jsonFiles[keys[index]] = file;
+                    }
+                });
+                resolve({ jsonFiles, errors });
+            },
+            (error) => {
+                reject(error);
+            },
+        );
+});
 
-export function fetchBSON(url) {
-    return new Promise((resolve, reject) => {
-        // fetch(url, {
-        //   mode: 'no-cors'
-        // })
-        fetch(url)
-            .then(status)
-            .then(bson)
-            .then((data) => {
-                resolve(data);
-            })
-            .catch((e) => {
-                reject(e);
-            });
-    });
-}
-
-export function fetchJSONFiles(urlArray) {
-    return new Promise((resolve, reject) => {
-        const promises = [];
-        const errors = [];
-
-        urlArray.forEach((url) => {
-            promises.push(fetch(url)
-                .then(status)
-                .then(json)
-                .then(data => data)
-                .catch((e) => {
-                    errors.push(url);
-                    return null;
-                }));
+const fetchArraybuffer = url => new Promise((resolve, reject) => {
+    // fetch(url, {
+    //   mode: 'no-cors'
+    // })
+    fetch(url)
+        .then(status)
+        .then(arrayBuffer)
+        .then((data) => {
+            resolve(data);
+        })
+        .catch((e) => {
+            reject(e);
         });
+});
 
-        Promise.all(promises)
-            .then(
-                (data) => {
-                    const jsonFiles = data.filter(file => file !== null);
-                    resolve({ jsonFiles, errors });
-                },
-                (error) => {
-                    reject(error);
-                },
-            );
-    });
-}
-
-export function fetchJSONFiles2(object, baseurl) {
-    return new Promise((resolve, reject) => {
-        const promises = [];
-        const errors = [];
-        const keys = [];
-
-        Object.entries(object).forEach(([key, url]) => {
-            keys.push(key);
-            promises.push(fetch(baseurl + url)
-                .then(status)
-                .then(json)
-                .then(data => data)
-                .catch((e) => {
-                    errors.push(url);
-                    return null;
-                }));
-        });
-
-        Promise.all(promises)
-            .then(
-                (data) => {
-                    const jsonFiles = {};
-                    data.forEach((file, index) => {
-                        if (file !== null) {
-                            jsonFiles[keys[index]] = file;
-                        }
-                    });
-                    resolve({ jsonFiles, errors });
-                },
-                (error) => {
-                    reject(error);
-                },
-            );
-    });
-}
-
-export function fetchArraybuffer(url) {
-    return new Promise((resolve, reject) => {
-        // fetch(url, {
-        //   mode: 'no-cors'
-        // })
-        fetch(url)
-            .then(status)
-            .then(arrayBuffer)
-            .then((data) => {
-                resolve(data);
-            })
-            .catch((e) => {
-                reject(e);
-            });
-    });
-}
-
-
-export const load = (file, type = null) => {
+const load = (file, type = null) => {
     let t = type;
     let parsedJSON;
     if (t === null) {
         if (typeof file !== 'string') {
             t = 'object';
-        } else if (file.search(/.ya?ml/) !== -1) {
+        } else if (file.search(/\.ya?ml/) !== -1) {
             t = 'yaml';
-        } else if (file.search(/.json/) !== -1) {
+        } else if (file.search(/\.json/) !== -1) {
             t = 'json';
-        } else if (file.search(/.bson/) !== -1) {
+        } else if (file.search(/\.bson/) !== -1) {
             t = 'bson';
-        } else if (file.search(/.cson/) !== -1) {
+        } else if (file.search(/\.cson/) !== -1) {
             t = 'cson';
         } else {
             try {
@@ -223,24 +227,40 @@ export const load = (file, type = null) => {
     }
     if (t === 'json') {
         return fetchJSON(file, type)
-            .then(data => data, () => null)
-            .catch(() => null);
+            .then(data => data, e => e);
     }
     if (t === 'yaml') {
         return fetchYAML(file, type)
-            .then(data => data, () => null)
-            .catch(() => null);
+            .then(data => data, e => e);
     }
     if (t === 'bson') {
         return fetchBSON(file, type)
-            .then(data => data, () => null)
-            .catch(() => null);
+            .then(data => data, e => e);
     }
     if (t === 'cson') {
         return fetchCSON(file, type)
-            .then(data => data, () => null)
-            .catch(() => null);
+            .then(data => data, e => e);
+    } else if (t === null) {
+        return fetchREST(file)
+            .then(data => data, e => e);
     }
+};
 
-    return Promise.reject(new Error('not a supported type'));
+export {
+    load,
+    status,
+    // parsers
+    json,
+    bson,
+    cson,
+    yaml,
+    arrayBuffer,
+    // fetch helpers
+    fetchJSON,
+    fetchJSONFiles,
+    fetchJSONFiles2,
+    fetchBSON,
+    fetchCSON,
+    fetchYAML,
+    fetchREST,
 };
