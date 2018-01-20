@@ -31,14 +31,21 @@ var _bson2 = _interopRequireDefault(_bson);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+// about fetch reject, see:
+// https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch#Checking_that_the_fetch_was_successful
+
+
 var bsonInstance = new _bson2.default(); // fetch helpers
 // import fetch from 'isomorphic-fetch';
 
 
 var status = function status(response) {
-    if (response.status >= 200 && response.status < 300) {
-        return _promise2.default.resolve(response);
+    if (!response.ok) {
+        return _promise2.default.reject(new Error(response.statusText));
     }
+    // if (response.status >= 200 && response.status < 300) {
+    //     return Promise.resolve(response);
+    // }
     return _promise2.default.reject(new Error(response.statusText));
 };
 
@@ -82,8 +89,11 @@ var checkTypeAndParse = function checkTypeAndParse(response) {
     if (type.indexOf('text/yaml') === 0) {
         return yaml(response);
     }
-    if (type.indexOf('application/octet-stream') === 0) {
+    if (type.indexOf('application/bson') === 0) {
         return bson(response);
+    }
+    if (type.indexOf('text/cson') === 0) {
+        return cson(response);
     }
     return _promise2.default.reject(new Error('could not detect type'));
 };
@@ -245,7 +255,7 @@ var load = function load(file) {
         } else {
             try {
                 parsedJSON = JSON.parse(file, type);
-                t = 'json_string';
+                t = 'json-string';
             } catch (e) {
                 t = null;
             }
@@ -255,7 +265,7 @@ var load = function load(file) {
     if (t === 'object') {
         return _promise2.default.resolve(file);
     }
-    if (t === 'json_string') {
+    if (t === 'json-string') {
         return _promise2.default.resolve(parsedJSON);
     }
     if (t === 'json') {
@@ -285,13 +295,12 @@ var load = function load(file) {
         }, function (e) {
             return e;
         });
-    } else if (t === null) {
-        return fetchREST(file).then(function (data) {
-            return data;
-        }, function (e) {
-            return e;
-        });
     }
+    return fetchREST(file).then(function (data) {
+        return data;
+    }, function (e) {
+        return e;
+    });
 };
 
 exports.load = load;

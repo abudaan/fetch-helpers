@@ -4,12 +4,19 @@ import CSON from 'cson-parser';
 import YAML from 'yamljs';
 import BSON from 'bson';
 
+// about fetch reject, see:
+// https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch#Checking_that_the_fetch_was_successful
+
+
 const bsonInstance = new BSON();
 
 const status = (response) => {
-    if (response.status >= 200 && response.status < 300) {
-        return Promise.resolve(response);
+    if (!response.ok) {
+        return Promise.reject(new Error(response.statusText));
     }
+    // if (response.status >= 200 && response.status < 300) {
+    //     return Promise.resolve(response);
+    // }
     return Promise.reject(new Error(response.statusText));
 };
 
