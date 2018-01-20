@@ -12,12 +12,13 @@ const bsonInstance = new BSON();
 
 const status = (response) => {
     if (response.ok) {
-        return Promise.resolve(response);
+        return response;
     }
+    throw new Error(response.statusText);
     // if (response.status >= 200 && response.status < 300) {
     //     return Promise.resolve(response);
     // }
-    return Promise.reject(new Error(response.statusText));
+    // return Promise.reject(new Error(response.statusText));
 };
 
 const json = response => response.json();
