@@ -40,8 +40,8 @@ var bsonInstance = new _bson2.default(); // fetch helpers
 
 
 var status = function status(response) {
-    if (!response.ok) {
-        return _promise2.default.reject(new Error(response.statusText));
+    if (response.ok) {
+        return _promise2.default.resolve(response);
     }
     // if (response.status >= 200 && response.status < 300) {
     //     return Promise.resolve(response);

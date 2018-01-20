@@ -11,8 +11,8 @@ import BSON from 'bson';
 const bsonInstance = new BSON();
 
 const status = (response) => {
-    if (!response.ok) {
-        return Promise.reject(new Error(response.statusText));
+    if (response.ok) {
+        return Promise.resolve(response);
     }
     // if (response.status >= 200 && response.status < 300) {
     //     return Promise.resolve(response);
